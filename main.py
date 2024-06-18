@@ -1,4 +1,5 @@
 from config_data import config
+from keyboards.main_menu import set_main_menu
 from aiogram import Bot, Dispatcher
 from handlers import user_handlers
 import asyncio
