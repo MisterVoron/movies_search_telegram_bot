@@ -8,7 +8,7 @@ from states.states import FSMSearchScript
 from filters.my_filters import IsGenre
 from keyboards.kb_genres import genres_kb
 from api.api_kinopoisk import movie_search
-
+from database.db import users
 
 
 router = Router()
@@ -56,7 +56,7 @@ async def process_name_sent(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     await message.answer(
         text=LEXICON['script_answer_1'],
-        reply_markup=genres_kb
+        reply_markup=genres_kb()
     )
     await state.set_state(FSMSearchScript.genre)
 
@@ -68,11 +68,11 @@ async def warning_not_name(message: Message):
     )
 
 
-@router.message(StateFilter(FSMSearchScript.genre), IsGenre())
-async def process_genre_sent(message: CallbackQuery, state: FSMContext, genre: str):
+@router.callback_query(StateFilter(FSMSearchScript.genre), IsGenre())
+async def process_genre_sent(callback: CallbackQuery, state: FSMContext, genre: str):
     await state.update_data(genre=genre)
-    await message.message.delete()
-    await message.answer(
+    await callback.message.delete()
+    await callback.message.answer(
         text=LEXICON['script_answer_2']
     )
     await state.set_state(FSMSearchScript.limit)
@@ -88,8 +88,11 @@ async def warning_not_genre(message: Message):
 @router.message(StateFilter(FSMSearchScript.limit), F.text.isdigit())
 async def process_limit_sent(message: Message, state: FSMContext):
     await state.update_data(limit=int(message.text))
+    users[message.from_user.id] = await state.get_data()
     await message.answer(
-        text=movie_search(state.name, state.genre, state.limit)
+        text=movie_search(name=users[message.from_user.id]['name'],
+                          genre=users[message.from_user.id]['genre'],
+                          limit=users[message.from_user.id]['limit'])
     )
 
 

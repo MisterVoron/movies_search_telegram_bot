@@ -4,8 +4,5 @@ from lexicon.lexicon import LEXICON_GENRES
 
 
 class IsGenre(BaseFilter):
-    def __init__(self):
-         self.genres = LEXICON_GENRES
-    
-    def __call__(self, message: CallbackQuery) -> bool | dict[str, str]:
-        return {genre: message.data} if message.data in self.genres else False
+    async def __call__(self, callback: CallbackQuery) -> bool | dict[str, str]:
+        return {'genre': callback.data} if callback.data in LEXICON_GENRES else False
