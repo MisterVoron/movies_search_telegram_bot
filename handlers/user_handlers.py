@@ -1,4 +1,4 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
@@ -9,6 +9,8 @@ from filters.my_filters import IsGenre
 from keyboards.kb_genres import genres_kb
 from api.api_kinopoisk import movie_search
 from database.db import users
+from utils.utils import convert_list_in_string
+import requests
 
 
 router = Router()
@@ -86,14 +88,22 @@ async def warning_not_genre(message: Message):
 
 
 @router.message(StateFilter(FSMSearchScript.limit), F.text.isdigit())
-async def process_limit_sent(message: Message, state: FSMContext):
+async def process_limit_sent(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(limit=int(message.text))
     users[message.from_user.id] = await state.get_data()
-    await message.answer(
-        text=movie_search(name=users[message.from_user.id]['name'],
-                          genre=users[message.from_user.id]['genre'],
-                          limit=users[message.from_user.id]['limit'])
-    )
+    info = movie_search(name=users[message.from_user.id]['name'],
+                        genre=users[message.from_user.id]['genre'],
+                        limit=users[message.from_user.id]['limit'])
+    for movie in info['docs']:
+        caption = '{name}\n{description}\nРейтинг: {rate}\nГод: {year}\n{genre}\n{age}+'.format(
+            name=movie['name'],
+            description=movie['description'],
+            rate=movie['rating']['kp'],
+            year=movie['year'],
+            genre=convert_list_in_string(movie['genres']),
+            age=movie['ageRating']
+        )
+        await bot.send_photo(message.chat.id, movie['poster']['url'], caption=caption)
 
 
 

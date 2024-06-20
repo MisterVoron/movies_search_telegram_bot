@@ -1,1 +1,1 @@
-users: dict[int, dict[str, str | int]] = []
+users: dict[int, dict[str, str | int]] = {}
