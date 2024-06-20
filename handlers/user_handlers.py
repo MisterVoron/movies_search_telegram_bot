@@ -9,7 +9,7 @@ from filters.my_filters import IsGenre
 from keyboards.kb_genres import genres_kb
 from api.api_kinopoisk import movie_search
 from database.db import users
-from utils.utils import convert_list_in_string
+from utils.utils import convert_list_in_string, photo_caption
 import requests
 
 
@@ -95,15 +95,8 @@ async def process_limit_sent(message: Message, state: FSMContext, bot: Bot):
                         genre=users[message.from_user.id]['genre'],
                         limit=users[message.from_user.id]['limit'])
     for movie in info['docs']:
-        caption = '{name}\n{description}\nРейтинг: {rate}\nГод: {year}\n{genre}\n{age}+'.format(
-            name=movie['name'],
-            description=movie['description'],
-            rate=movie['rating']['kp'],
-            year=movie['year'],
-            genre=convert_list_in_string(movie['genres']),
-            age=movie['ageRating']
-        )
-        await bot.send_photo(message.chat.id, movie['poster']['url'], caption=caption)
+        caption = photo_caption(movie)
+        await bot.send_photo(message.chat.id, movie['poster']['url'], caption=caption, parse_mode='HTML')
 
 
 
