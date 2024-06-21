@@ -7,6 +7,7 @@ from lexicon.lexicon import LEXICON
 from states.states import FSMSearchScript
 from filters.my_filters import IsGenre
 from keyboards.kb_genres import genres_kb
+from keyboards.pagination_kb import create_pagination_keyboard
 from api.api_kinopoisk import movie_search
 from database.db import users
 from utils.utils import convert_list_in_string, photo_caption
@@ -91,13 +92,46 @@ async def warning_not_genre(message: Message):
 async def process_limit_sent(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(limit=int(message.text))
     users[message.from_user.id] = await state.get_data()
+    await state.clear()
     info = movie_search(name=users[message.from_user.id]['name'],
                         genre=users[message.from_user.id]['genre'],
                         limit=users[message.from_user.id]['limit'])
-    for movie in info['docs']:
+    movie = info['docs'][0]
+    if users[message.from_user.id]['limit'] == 1:
         caption = photo_caption(movie)
         await bot.send_photo(message.chat.id, movie['poster']['url'], caption=caption, parse_mode='HTML')
+    else:
+        users[message.from_user.id]['position'] = 0
+        users[message.from_user.id]['movies'] = info['docs']
+        caption = photo_caption(movie)
+        await bot.send_photo(message.chat.id, movie['poster']['url'],
+                             caption=caption, parse_mode='HTML',
+                             reply_markup=create_pagination_keyboard(
+                                page=users[message.from_user.id]['position'],
+                                limit=users[message.from_user.id]['limit']
+                             ))
 
+
+@router.callback_query(F.data.in_({'backward', 'forward'}))
+async def process_backward_forward_press(callback: CallbackQuery, bot: Bot):
+    if callback.data == 'backward':
+        users[callback.from_user.id]['position'] -= 1
+    else:
+        users[callback.from_user.id]['position'] += 1
+    position = users[callback.from_user.id]['position']
+    movie = users[callback.from_user.id]['movies'][position]
+    caption = photo_caption(movie)
+    await bot.send_photo(callback.message.chat.id, movie['poster']['url'],
+                             caption=caption, parse_mode='HTML',
+                             reply_markup=create_pagination_keyboard(
+                                page=users[callback.from_user.id]['position'],
+                                limit=users[callback.from_user.id]['limit']
+                             ))
+    await callback.answer()
+
+
+
+    
 
 
 

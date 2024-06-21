@@ -12,10 +12,10 @@ def pagination_keyboard(*buttons: str) -> InlineKeyboardMarkup:
     return kb_builder.as_markup()
 
 def create_pagination_keyboard(page: int, limit: int):
-    middle_button = f'{page}/{limit}'
-    if page == 1:
+    middle_button = f'{page + 1}/{limit}'
+    if page == 0:
         return pagination_keyboard(middle_button, 'forward')
-    elif 1 < page < limit:
+    elif 0 < page < limit - 1:
         return pagination_keyboard('backward', middle_button, 'forward')
     else:
         return pagination_keyboard('backward', middle_button)
