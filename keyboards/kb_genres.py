@@ -13,6 +13,6 @@ def genres_kb() -> InlineKeyboardMarkup:
             callback_data=button
         ))
     
-    kb_builder.row(*buttons, width=4)
+    kb_builder.row(*buttons, width=3)
 
     return kb_builder.as_markup()
