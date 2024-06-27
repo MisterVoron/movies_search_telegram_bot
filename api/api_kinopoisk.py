@@ -1,16 +1,21 @@
 import requests
+from config_data.config import API_KEY
+
+
+url = 'https://api.kinopoisk.dev/v1.4/movie/search?page=1&limit='
+
+headers = {
+    "accept": "application/json",
+    "X-API-KEY": API_KEY
+}
 
 
 def movie_search(name: str, genre: str, limit: int):
-    pass
+    return requests.get(url=f'{url}{limit}&query={name} {genre}', headers=headers).json()
 
 
-def movie_by_rating():
-    pass
-
-
-def low_budget_movie():
-    pass
+def movie_by_rating(rating: str, limit: int):
+    return requests.get(url=f'{url}{limit}&rating.kp={rating}', headers=headers).json()
 
 
 def low_budget_movie():
