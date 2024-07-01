@@ -15,7 +15,7 @@ def movie_search(name: str, genre: str, limit: int):
 
 
 def movie_by_rating(rating: str, limit: int):
-    return requests.get(url=f'{url}{limit}&rating.kp={rating}', headers=headers).json()
+    return requests.get(url=f'{url}{limit}&rating.imdb={rating}', headers=headers).json()
 
 
 def low_budget_movie():
