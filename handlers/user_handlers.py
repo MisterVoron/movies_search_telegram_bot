@@ -9,8 +9,9 @@ from filters.my_filters import IsGenre, IsRating
 from keyboards.kb_genres import genres_kb
 from keyboards.pagination_kb import create_pagination_keyboard
 from api.api_kinopoisk import movie_search, movie_by_rating
-from database.db import users
+from database.db import users, User, History, Search
 from utils.utils import convert_list_in_string, photo_caption
+from peewee import IntegrityError
 import requests
 
 
@@ -19,9 +20,19 @@ router = Router()
 
 @router.message(CommandStart())
 async def process_command_start(message: Message):
-    await message.answer(
-        text=LEXICON['/start']
-    )
+    user_id = message.from_user.id
+    user_name = message.from_user.first_name
+
+
+    try:
+        User.create(user_id=message.from_user.id, name=message.from_user.first_name)
+        await message.answer(
+            text=LEXICON['/start']
+        )
+    except IntegrityError:
+        await message.answer(
+            text=LEXICON['again_/start'].format(user_name)
+        )
 
 
 @router.message(Command(commands='help'))
