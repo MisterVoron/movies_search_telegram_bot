@@ -1,35 +1,41 @@
-from peewee import Model, SqliteDatabase, CharField, IntegerField, ForeignKeyField
+from peewee import Model, SqliteDatabase, CharField, IntegerField, ForeignKeyField, DateField, FloatField
 
 
 db = SqliteDatabase('database/users.db')
 
-class User(Model):
-    name = CharField()
-    user_id = IntegerField(primary_key=True)
-
+class BaseModel(Model):
     class Meta:
         database = db
 
-
-class Search(Model):
-    id_user = ForeignKeyField(User, backref='search')
+class User(BaseModel):
     name = CharField()
-    genre = CharField()
+    user_id = IntegerField(unique=True)
+    position = IntegerField(default=0)
+
+
+class Search(BaseModel):
+    user = ForeignKeyField(User, backref='searches')
+    name = CharField(null=True)
+    genre = CharField(null=True)
     limit = IntegerField()
-    position = IntegerField()
-    poster = CharField()
-    rating = CharField()
+    rating = CharField(null=True)
     
-    class Meta:
-        database = db
 
+class Movie(BaseModel):
+    search = ForeignKeyField(Search, backref='movies')
+    name = CharField()
+    description = CharField()
+    rating = FloatField()
+    year = IntegerField()
+    genre = CharField()
+    age = IntegerField()
+    poster = CharField()
+    
 
-class History(Model):
-    search_id = ForeignKeyField(Search)
+class History(BaseModel):
+    search = ForeignKeyField(Search)
+    date = DateField()
 
-    class Meta:
-        database = db
-        
 
 db.create_tables([User, Search, History])
 

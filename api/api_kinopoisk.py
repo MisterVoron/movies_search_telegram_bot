@@ -24,7 +24,3 @@ def low_budget_movie():
 
 def high_budget_movie():
     pass
-
-
-def history():
-    pass
