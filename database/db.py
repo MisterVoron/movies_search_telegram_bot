@@ -3,9 +3,11 @@ from peewee import Model, SqliteDatabase, CharField, IntegerField, ForeignKeyFie
 
 db = SqliteDatabase('database/users.db')
 
+
 class BaseModel(Model):
     class Meta:
         database = db
+
 
 class User(BaseModel):
     name = CharField()
@@ -13,13 +15,18 @@ class User(BaseModel):
     position = IntegerField(default=0)
 
 
+class History(BaseModel):
+    user = ForeignKeyField(User, unique=True, backref='history')
+    date = DateField()
+
+
 class Search(BaseModel):
-    user = ForeignKeyField(User, backref='searches')
+    history = ForeignKeyField(History, backref='searches')
     name = CharField(null=True)
     genre = CharField(null=True)
     limit = IntegerField()
     rating = CharField(null=True)
-    
+
 
 class Movie(BaseModel):
     search = ForeignKeyField(Search, backref='movies')
@@ -27,16 +34,22 @@ class Movie(BaseModel):
     description = CharField()
     rating = FloatField()
     year = IntegerField()
-    genre = CharField()
+    genres = CharField()
     age = IntegerField()
     poster = CharField()
     
+    def __str__(self):
+       return '<b>{name}</b>\n<i>{description}</i>\nРейтинг: <b>{rating}</b>\
+            \nГод: {year}\n{genres}\n<u>{age}+</u>'.format(
+            name=self.name,
+            description=self.description,
+            rating=self.rating,
+            year=self.year,
+            genres=self.genres,
+            age=self.age
+        )
+    
 
-class History(BaseModel):
-    search = ForeignKeyField(Search)
-    date = DateField()
-
-
-db.create_tables([User, Search, History])
+db.create_tables(BaseModel.__subclasses__())
 
 users: dict[int, dict[str, str | int]] = {}

@@ -9,10 +9,10 @@ from filters.my_filters import IsGenre, IsRating
 from keyboards.kb_genres import genres_kb
 from keyboards.pagination_kb import create_pagination_keyboard
 from api.api_kinopoisk import movie_search, movie_by_rating
-from database.db import users, User, History, Search
-from utils.utils import convert_list_in_string, photo_caption
+from database.db import users, User, History, Search, Movie
+from utils.utils import photo_caption
 from peewee import IntegrityError
-import requests
+from datetime import date
 
 
 router = Router()
@@ -102,24 +102,28 @@ async def warning_not_genre(message: Message):
 @router.message(StateFilter(FSMSearchScript.limit), F.text.isdigit())
 async def process_limit_sent(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(limit=int(message.text))
-    users[message.from_user.id] = await state.get_data()
+    storage = await state.get_data()
+    user = User.get(User.user_id == message.from_user.id)
+    user.position = 0
+    user.save()
+    history, _ = History.get_or_create(user=user, date=date.today())
+    search, _ = Search.get_or_create(history=history, name=storage['name'], genre=storage['genre'], limit=int(storage['limit']))
     await state.clear()
-    info = movie_search(name=users[message.from_user.id]['name'],
-                        genre=users[message.from_user.id]['genre'],
-                        limit=users[message.from_user.id]['limit'])
+    info = movie_search(name=storage['name'],
+                        genre=storage['genre'],
+                        limit=storage['limit'])
     movie = info['docs'][0]
-    if users[message.from_user.id]['limit'] == 1:
-        caption = photo_caption(movie)
+    if storage['limit'] == 1:
+        caption = photo_caption(search=search, movie=movie)
         await bot.send_photo(message.chat.id, movie['poster']['url'], caption=caption, parse_mode='HTML')
     else:
-        users[message.from_user.id]['position'] = 0
-        users[message.from_user.id]['movies'] = info['docs']
-        caption = photo_caption(movie)
+        storage['movies'] = info['docs']
+        caption = photo_caption(search=search, movie=movie)
         await bot.send_photo(message.chat.id, movie['poster']['url'],
                              caption=caption, parse_mode='HTML',
                              reply_markup=create_pagination_keyboard(
-                                page=users[message.from_user.id]['position'],
-                                limit=users[message.from_user.id]['limit']
+                                page=storage['position'],
+                                limit=storage['limit']
                              ))
 
 
