@@ -3,6 +3,7 @@ from config_data.config import API_KEY
 
 
 url = 'https://api.kinopoisk.dev/v1.4/movie/search?page=1&limit='
+ 
 
 headers = {
     "accept": "application/json",
@@ -19,8 +20,8 @@ def movie_by_rating(rating: str, limit: int):
 
 
 def low_budget_movie():
-    pass
+    return requests.get(url=f'{url}{limit}&budget.value=1000', headers=headers).json()
 
 
 def high_budget_movie():
-    pass
+    return requests.get(url=f'{url}{limit}&budget.value=6666666', headers=headers).json()
