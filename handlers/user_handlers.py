@@ -104,7 +104,7 @@ async def process_limit_sent(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(limit=int(message.text))
     storage = await state.get_data()
     user = User.get(User.user_id == message.from_user.id)
-    user.position = 0
+    user.position = 1
     user.save()
     history, _ = History.get_or_create(user=user, date=date.today())
     search, _ = Search.get_or_create(history=history, name=storage['name'], genre=storage['genre'], limit=int(storage['limit']))
@@ -113,17 +113,19 @@ async def process_limit_sent(message: Message, state: FSMContext, bot: Bot):
                         genre=storage['genre'],
                         limit=storage['limit'])
     movie = info['docs'][0]
+    caption = photo_caption(search=search, movie=movie)
     if storage['limit'] == 1:
-        caption = photo_caption(search=search, movie=movie)
         await bot.send_photo(message.chat.id, movie['poster']['url'], caption=caption, parse_mode='HTML')
     else:
-        storage['movies'] = info['docs']
-        caption = photo_caption(search=search, movie=movie)
+        for movie in info['docs']:
+            photo_caption(search=search, movie=movie)
         await bot.send_photo(message.chat.id, movie['poster']['url'],
                              caption=caption, parse_mode='HTML',
                              reply_markup=create_pagination_keyboard(
-                                page=storage['position'],
-                                limit=storage['limit']
+                                page=user.position,
+                                limit=(Search.select().join(History).join(User)
+                                .where(User.user_id == message.from_user.id)
+                                .order_by(Search.id.desc()).get().limit)
                              ))
 
 
@@ -137,17 +139,22 @@ async def warning_not_genre(message: Message):
 @router.callback_query(F.data.in_({'backward', 'forward'}))
 async def process_backward_forward_press(callback: CallbackQuery, bot: Bot):
     if callback.data == 'backward':
-        users[callback.from_user.id]['position'] -= 1
+        user = User.get(User.user_id == callback.from_user.id)
+        user.position -= 1
+        user.save()
     else:
-        users[callback.from_user.id]['position'] += 1
-    position = users[callback.from_user.id]['position']
-    movie = users[callback.from_user.id]['movies'][position]
-    caption = photo_caption(movie)
-    await bot.send_photo(callback.message.chat.id, movie['poster']['url'],
-                             caption=caption, parse_mode='HTML',
+        user = User.get(User.user_id == callback.from_user.id)
+        user.position += 1
+        user.save()
+    position = User.get(User.user_id == callback.from_user.id).position
+    caption = Movie.get(Movie.id == position)
+    await bot.send_photo(callback.message.chat.id, str(caption.poster),
+                             caption=str(caption), parse_mode='HTML',
                              reply_markup=create_pagination_keyboard(
-                                page=users[callback.from_user.id]['position'],
-                                limit=users[callback.from_user.id]['limit']
+                                page=position,
+                                limit=(Search.select().join(History).join(User)
+                                .where(User.user_id == callback.from_user.id)
+                                .order_by(Search.id.desc()).get().limit)
                              ))
     await callback.answer()
 

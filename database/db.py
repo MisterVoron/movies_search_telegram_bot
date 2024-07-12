@@ -12,11 +12,11 @@ class BaseModel(Model):
 class User(BaseModel):
     name = CharField()
     user_id = IntegerField(unique=True)
-    position = IntegerField(default=0)
+    position = IntegerField(default=1)
 
 
 class History(BaseModel):
-    user = ForeignKeyField(User, unique=True, backref='history')
+    user = ForeignKeyField(User, backref='history')
     date = DateField()
 
 
