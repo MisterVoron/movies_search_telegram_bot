@@ -1,4 +1,4 @@
-from peewee import Model, SqliteDatabase, CharField, IntegerField, ForeignKeyField, DateField, FloatField
+from peewee import Model, SqliteDatabase, CharField, IntegerField, ForeignKeyField, FloatField, DateTimeField
 
 
 db = SqliteDatabase('database/users.db')
@@ -12,24 +12,17 @@ class BaseModel(Model):
 class User(BaseModel):
     name = CharField()
     user_id = IntegerField(unique=True)
-    position = IntegerField(default=1)
+    pg_position = IntegerField(default=0)
 
 
 class History(BaseModel):
-    user = ForeignKeyField(User, backref='history')
-    date = DateField()
-
-
-class Search(BaseModel):
-    history = ForeignKeyField(History, backref='searches')
-    name = CharField(null=True)
-    genre = CharField(null=True)
-    limit = IntegerField()
-    rating = CharField(null=True)
+    user = ForeignKeyField(User, backref='histories')
+    date = DateTimeField()
+    command = CharField()
+    limit = IntegerField(default=1)
 
 
 class Movie(BaseModel):
-    search = ForeignKeyField(Search, backref='movies')
     name = CharField()
     description = CharField()
     rating = FloatField()
@@ -50,6 +43,9 @@ class Movie(BaseModel):
         )
     
 
-db.create_tables(BaseModel.__subclasses__())
+class HistoryMovie(BaseModel):
+    history = ForeignKeyField(History)
+    movie = ForeignKeyField(Movie)
 
-users: dict[int, dict[str, str | int]] = {}
+
+db.create_tables(BaseModel.__subclasses__())

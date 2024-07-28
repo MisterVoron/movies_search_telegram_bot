@@ -11,3 +11,7 @@ class FSMSearchScriptRating(StatesGroup):
     rating = State()
     limit = State()
     
+
+class FSMSearchScriptLimit(StatesGroup):
+    limit = State()
+    

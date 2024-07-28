@@ -1,5 +1,5 @@
 from peewee import ModelBase
-from database.db import Movie
+from database.db import Movie, HistoryMovie
 
 
 def _convert_list_in_string(lst: list[dict[str, str]]) -> str:
@@ -9,9 +9,8 @@ def _convert_list_in_string(lst: list[dict[str, str]]) -> str:
     return result[:-2]
 
 
-def photo_caption(movie: dict, search: ModelBase) -> str:
-    movie_model = Movie.create(
-        search=search,
+def photo_caption(movie: dict, history: ModelBase) -> str:
+    movie_model, _ = Movie.get_or_create(
         name=movie['name'],
         description=movie['description'],
         rating=float(movie['rating']['kp']),
@@ -20,5 +19,6 @@ def photo_caption(movie: dict, search: ModelBase) -> str:
         age=int(movie['ageRating']),
         poster=movie['poster']['url']
     )
+    HistoryMovie.get_or_create(history=history, movie=movie_model)
     
     return str(movie_model)

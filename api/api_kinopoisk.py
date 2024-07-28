@@ -19,9 +19,9 @@ def movie_by_rating(rating: str, limit: int):
     return requests.get(url=f'{url}{limit}&rating.imdb={rating}', headers=headers).json()
 
 
-def low_budget_movie():
+def low_budget_movie(limit: int):
     return requests.get(url=f'{url}{limit}&budget.value=1000', headers=headers).json()
 
 
-def high_budget_movie():
+def high_budget_movie(limit: int):
     return requests.get(url=f'{url}{limit}&budget.value=6666666', headers=headers).json()
