@@ -57,6 +57,11 @@ async def process_command_cancel_in_state(message: Message, state: FSMContext):
     )
     
 
+@router.message(Command(commands='history'))
+async def process_command_history(message: Message):
+    pass
+    
+
 @router.message(Command(commands='movie_search'), StateFilter(default_state))    
 async def process_command_movie_search(message: Message, state: FSMContext):
     await message.answer(
@@ -219,8 +224,9 @@ async def warning_not_limit(message: Message):
     )
 
 
-@router.message(Command(commands='low_budget_movie'), StateFilter(default_state))
+@router.message(Command(commands=['low_budget_movie', 'high_budget_movie']), StateFilter(default_state))
 async def process_low_budget_movie_command(message: Message, state: FSMContext):
+    await state.update_data(command=message.text)
     await message.answer(
         text=LEXICON['limit']
     )
@@ -234,11 +240,18 @@ async def process_limit_sent(message: Message, state: FSMContext, bot: Bot):
     await state.clear()
     user_id = message.from_user.id
     limit = storage['limit']
-    info = low_budget_movie(limit=limit)
+
+    if storage['command'] == 'low_budget_movie':
+        info = low_budget_movie(limit=limit)
+        command = '/low_budget_movie'
+    else:
+        info = high_budget_movie(limit=limit)
+        command = '/high_budget_movie'
+
     user = User.get(User.user_id == user_id)
     user.pg_position = 0
     user.save()
-    history, _ = History.get_or_create(user=user, date=datetime.today(), command='/low_budget_movie', limit=limit)
+    history, _ = History.get_or_create(user=user, date=datetime.today(), command=command, limit=limit)
     movie = info['docs'][0]
     caption = photo_caption(movie=movie, history=history)
     if storage['limit'] == 1:  

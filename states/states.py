@@ -13,5 +13,6 @@ class FSMSearchScriptRating(StatesGroup):
     
 
 class FSMSearchScriptLimit(StatesGroup):
+    command = State()
     limit = State()
     
