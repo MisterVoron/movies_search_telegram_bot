@@ -59,7 +59,12 @@ async def process_command_cancel_in_state(message: Message, state: FSMContext):
 
 @router.message(Command(commands='history'))
 async def process_command_history(message: Message):
-    pass
+    result = ''
+    for history in History.select():
+        result += f'{history.date.strftime('%d.%m.%Y %H:%M:%S')} {history.command}\n'
+    await message.answer(
+        text=result
+    )
     
 
 @router.message(Command(commands='movie_search'), StateFilter(default_state))    
