@@ -10,5 +10,5 @@ class IsGenre(BaseFilter):
 
 class IsRating(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return message.text.isdigit() or ''.join(map(str.strip, test.split('-'))).replace('.', '').isdigit()
+        return message.text.isdigit() or ''.join(map(str.strip, message.text.split('-'))).replace('.', '').isdigit()
         
