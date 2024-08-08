@@ -1,7 +1,7 @@
 from config_data import config
 from keyboards.main_menu import set_main_menu
 from aiogram import Bot, Dispatcher
-from handlers import user_handlers
+from handlers import user_handlers, other_handlers
 import asyncio
 
 
@@ -13,6 +13,7 @@ async def main():
     bot = Bot(token=config.BOT_TOKEN)
     dp = Dispatcher()
     dp.include_router(user_handlers.router)
+    dp.include_router(other_handlers.router)
 
     await set_main_menu(bot)
 
