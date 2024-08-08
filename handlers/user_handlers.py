@@ -145,16 +145,6 @@ async def warning_not_limit(message: Message):
     await message.answer(
         text=LEXICON['warning_limit']
     )
-    await state.set_state(FSMSearchScriptRating.rating)
-    
-
-@router.message(StateFilter(FSMSearchScriptRating.rating), IsRating())
-async def process_rating_sent(message: Message, state: FSMContext):
-    await state.update_data(rating=message.text)
-    await message.answer(
-        text=LEXICON['limit']
-    )
-    await state.set_state(FSMSearchScriptRating.limit)
 
 
 @router.callback_query(F.data.in_({'backward', 'forward'}))
@@ -180,28 +170,6 @@ async def process_backward_forward_press(callback: CallbackQuery, bot: Bot):
                              ))
     await callback.answer()
 
-@router.message(StateFilter(FSMSearchScriptRating.limit), F.text.isdigit())
-async def process_limit_sent(message: Message, state: FSMContext, bot: Bot):
-    await state.update_data(limit=int(message.text))
-    user_id = message.from_user.id
-    users[user_id] = await state.get_data()
-    await state.clear()
-    info = movie_by_rating(rating=users[user_id]['rating'],
-                        limit=users[user_id]['limit'])
-    movie = info['docs'][0]
-    if users[user_id]['limit'] == 1:
-        caption = photo_caption(movie)
-        await bot.send_photo(message.chat.id, movie['poster']['url'], caption=caption, parse_mode='HTML')
-    else:
-        users[user_id]['position'] = 0
-        users[user_id]['movies'] = info['docs']
-        caption = photo_caption(movie)
-        await bot.send_photo(message.chat.id, movie['poster']['url'],
-                             caption=caption, parse_mode='HTML',
-                             reply_markup=create_pagination_keyboard(
-                                page=users[message.from_user.id]['position'],
-                                limit=users[message.from_user.id]['limit']
-                             ))
 
 @router.message(Command(commands='movie_by_rating'), StateFilter(default_state))
 async def process_movie_by_rating_command(message: Message, state: FSMContext):
